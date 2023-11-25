@@ -16,19 +16,44 @@ enum Role {
 }
 
 model User {
-  id          Int      @id @unique @default(autoincrement())
-  email       String   @unique
+  id          Int           @id @unique @default(autoincrement())
+  email       String        @unique
   name        String?
   surname     String?
   diplomas    String?
   age         Int?
-  role        Role     @default(USER)
+  role        Role          @default(USER)
   description String?
-  created_at  DateTime @default(now())
+  speciality  String?
+  created_at  DateTime      @default(now())
+  event       UserToEvent[]
 }
 
 model UserAuthWithCode {
   email      String   @unique
   code       String?
   created_at DateTime @default(now())
+}
+
+model Event {
+  id               Int     @id @unique @default(autoincrement())
+  name             String
+  phone            String?
+  creator          Int
+  image            String?
+  start_at         String
+  end_at           String
+  registerStart_at String
+  registerEnd_at   String
+
+  user UserToEvent[]
+}
+
+model UserToEvent {
+  user_id  Int
+  event_id Int
+  event    Event @relation(fields: [event_id], references: [id])
+  user     User  @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, event_id])
 }

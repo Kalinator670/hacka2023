@@ -47,6 +47,12 @@ export class UserProfileDto {
   @IsOptional()
   @IsString()
     description?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  speciality?: string;
+
 }
 
 export class UserProfileWithIdDto extends UserProfileDto {
