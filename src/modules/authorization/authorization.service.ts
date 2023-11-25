@@ -11,7 +11,7 @@ import {
   IAuthorizationCode,
 } from '../../models/request/authorization.requests';
 import { ICooldownResponse } from '../../models/responses/authorization.responses';
-import { ITokensResponse } from '../../models/responses/shared.responses';
+import { ITokensResponse, ITokensResponseRefr } from '../../models/responses/shared.responses';
 import { PrismaService } from '../../utils/prisma.service';
 import { Requests } from '../../utils/requests';
 import { config } from 'dotenv';
@@ -102,17 +102,17 @@ export class AuthorizationService {
 
   public async refresh(body: IAuthorizationRefresh): Promise<ITokensResponse> {
     const tokenData: JwtPayload = this.decodeToken(body.refreshToken);
-    const checkExist = await this.prisma.user.count({
+    const checkExist = await this.prisma.user.findFirst({
       where: { id: tokenData.id },
     });
     if (!checkExist) {
       throw new NotFoundException('User was not found');
     }
-
-    return this.makeTokens({ id: tokenData.id });
+    const maketoken = this.makeTokens({ id: tokenData.id });
+    return {user: checkExist, ...maketoken };
   }
 
-  public makeTokens(data: object = {}): ITokensResponse {
+  public makeTokens(data: object = {}): ITokensResponseRefr {
     const accessToken: string = jwt.sign(data,
       process.env.ACCESS_TOKEN_SECRET, {
       expiresIn: '15m',

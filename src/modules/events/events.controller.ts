@@ -1,4 +1,4 @@
-import { Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { ApiOkResponse } from '@nestjs/swagger';
 import { AuthorizationGuard } from '../authorization/guards/authorization.guard';
@@ -15,7 +15,7 @@ export class EventsController {
   @UseGuards(AuthorizationGuard)
   @Post('/create-event')
   async createEvent(
-    @Body() body: ,
+    @Body() body: , 
   ): Promise<ICooldownResponse> {
     const response = await this.;
     return response;
