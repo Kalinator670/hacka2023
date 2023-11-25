@@ -43,7 +43,7 @@ export class UserController {
 
   @ApiOkResponse({ type: 'Change inf user' })
   @UseGuards(AuthorizationGuard)
-  @Put('/update_profile/:idd')
+  @Put('/update_profile')
   async updateUser(@Body() body: UserProfileDto): Promise<unknown> {
     const user = await this.userService.updateUser(body.id, body);
     return user;
