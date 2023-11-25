@@ -22,15 +22,15 @@ export class EventsController {
     return response;
   }
 
-  /*@ApiOkResponse({ type: 'Change inf user' })
+  @ApiOkResponse({ type: 'Change inf user' })
   @UseGuards(AuthorizationGuard)
-  @Post('/create-event')
+  @Post('/add-user-event')
   async addUserEvent(
-    @Body() body: UserToEvent, 
-  ): Promise<Event> {
+    @Body() body: UserToEvent,
+  ): Promise<UserToEvent> {
     const response = await this.eventsService.addUserEvent(body);
     return response;
-  }*/
+  }
 
 
 
