@@ -81,21 +81,23 @@ export class AuthorizationService {
     });
   }
 
-  public async verifyCode(body: IAuthorizationCode): Promise<ITokensResponse> {
+  public async verifyCode(body: IAuthorizationCode): Promise<void> {
     const checkExist = await this.prisma.userAuthWithCode.count({
       where: { email: body.email, code: body.code },
     });
     if (!checkExist) {
       throw new NotFoundException('Неверные данные');
     }
-
+    const user = await this.prisma.user.findFirst({
+      where: { email: body.email },
+    });
     await this.prisma.userAuthWithCode.update({
       where: { email: body.email },
       data: { code: null},
     });
     const { id } = await this.prisma.user.findUnique({ where: { email: body.email } });
     const tokens = this.makeTokens({ id });
-    return tokens;
+    return { ...tokens, user } as any;
   }
 
   public async refresh(body: IAuthorizationRefresh): Promise<ITokensResponse> {

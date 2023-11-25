@@ -44,7 +44,7 @@ export class AuthorizationController {
   @Post('/verify-code')
   async verifyCode(
     @Body() body: AuthorizationCodeDto,
-  ): Promise<ITokensResponse> {
+  ): Promise<void> {
     const tokens = await this.authorizationService.verifyCode(body);
     return tokens;
   }
