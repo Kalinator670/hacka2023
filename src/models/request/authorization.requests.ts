@@ -1,5 +1,4 @@
 export interface IAuthorizationCode {
-  email: string;
   code: string;
 }
 
