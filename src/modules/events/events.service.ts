@@ -41,5 +41,17 @@ export class EventsService {
     return userToEvent;
   }
 
+  public async getAllEvents(): Promise<void> {
+
+    const allEvents = await this.prisma.event.findMany({
+      include: {
+        user: {
+          include: { user: true },
+        },
+      },
+    });
+
+    return allEvents as any;
+  }
 
 }
