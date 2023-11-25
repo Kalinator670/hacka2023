@@ -122,8 +122,8 @@ export class AuthorizationService {
       expiresIn: '180d',
     });
     return {
-      accessToken: `Bearer ${accessToken}`,
-      refreshToken: `Bearer ${refreshToken}`,
+      accessToken: accessToken,
+      refreshToken: refreshToken,
     };
   }
 
