@@ -3,9 +3,10 @@ import { AuthorizationModule } from './modules/authorization/authorization.modul
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './modules/user/user.module';
 import { EventsModule } from './modules/events/events.module';
+import { ChatgptModule } from './modules/chatgpt/chatgpt.module';
 
 @Module({
-  imports: [AuthorizationModule, ConfigModule.forRoot(), UserModule, EventsModule],
+  imports: [AuthorizationModule, ConfigModule.forRoot(), UserModule, EventsModule, ChatgptModule],
   controllers: [],
   providers: [],
 })

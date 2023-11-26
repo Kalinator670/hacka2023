@@ -5,7 +5,7 @@ import { GptRequestDto } from './dto/request-roadmap.dto';
 @Injectable()
 export class ChatgptService {
   public async getRoadmap(body: GptRequestDto): Promise<void> {
-    const chatGPTBaseUrl = 'https://api.openai.com/v1/chat/completions';
+    const chatGPTBaseUrl = 'https://gigachat.devices.sberbank.ru/api/v1/chat/completions';
     const apiKey = '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';
 
     try {
