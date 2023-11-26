@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 import { AuthorizationGuard } from '../authorization/guards/authorization.guard';
 import { Event, User, UserToEvent } from '@prisma/client';
+import { CreateUserDto } from '../user/dto/user.dto';
 
 @Controller('events')
 export class EventsController {
@@ -40,6 +41,12 @@ export class EventsController {
     return allEvent;
   }
 
-
+  @ApiOkResponse({ type: 'Get one event' })
+  @UseGuards(AuthorizationGuard)
+  @Get('/:ok')
+  async getOneEvent(@Param() params: CreateUserDto): Promise<Event> {
+    const user = await this.eventsService.getEvent(params.id);
+    return user;
+  }
 
 }

@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/utils/prisma.service';
 import { Requests } from 'src/utils/requests';
 import { Event, UserToEvent } from '@prisma/client';
@@ -52,6 +52,16 @@ export class EventsService {
     });
 
     return allEvents as any;
+  }
+
+  public async getEvent(id: number): Promise<Event> {
+    const event = await this.prisma.event.findFirst({
+      where: { id },
+    });
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+    return event;
   }
 
 }
