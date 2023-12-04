@@ -1,35 +1,37 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { Injectable, ExecutionContext, CanActivate } from '@nestjs/common';
-import { AuthorizationService } from '../authorization.service';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { FastifyReply } from 'fastify';
+import { Observable } from 'rxjs';
+import { JwtService } from '@nestjs/jwt';
+import { CookieService } from '../ cookie.service';
 
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
+  constructor(private jwtService: JwtService) {}
 
-  private readonly authService: AuthorizationService;
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
+    const req = context.switchToHttp().getRequest() as FastifyReply;
+    const token = req.cookies[CookieService.tokenKey];
 
-  constructor(authService: AuthorizationService) {
-    this.authService = authService;
-  }
+    if (!token) {
+      throw new UnauthorizedException();
+    }
 
-  public canActivate(context: ExecutionContext): boolean {
     try {
-      const http = context.switchToHttp().getRequest();
-      if (!http.headers?.authorization) {
-        return false;
-      }
-      const token = http.headers.authorization.split(' ')?.[1];
-      if (!token) {
-        return false;
-      }
-
-      const { id } = this.authService.decodeToken(token);
-      http.userId = id;
-
-      return true;
+      const sessionInfo = this.jwtService.verifyAsync(token, {
+        secret: process.env.ACCESS_TOKEN_SECRET,
+      });
+      req['session'] = sessionInfo;
+    } catch {
+      throw new UnauthorizedException();
     }
-    catch (error) {
-      return false;
-    }
+
+    return true;
   }
-
 }

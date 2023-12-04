@@ -1,22 +1,37 @@
-import { Controller, Post, Body } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Res,
+} from '@nestjs/common';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ICooldownResponse } from '../../models/responses/authorization.responses';
-import { ITokensResponse } from '../../models/responses/shared.responses';
-import { ApiLogin, ApiRefresh, ApiSendCode, ApiSignUp, ApiVerifyCode } from '../../swagger/authorization/auth-response';
+import {
+  ApiLogin,
+  ApiSendCode,
+  ApiSignUp,
+  ApiVerifyCode,
+} from '../../swagger/authorization/auth-response';
 import { AuthorizationService } from './authorization.service';
 import { AuthorizationCodeDto } from './dto/authorization-code.dto';
 import { AuthorizationPhoneDto } from './dto/authorization-email.dto';
-import { AuthorizationRefreshDto } from './dto/authorization-refresh.dto';
+import { AuthorizationGuard } from './guards/authorization.guard';
+import { SessionInfo } from 'src/utils/session-info.decorator';
+import { GetSessionInfoDto } from './dto/authorization-get-session.dto';
+import { CookieService } from './ cookie.service';
+import { FastifyReply } from 'fastify';
 
 @ApiTags('Authorization')
 @Controller('auth')
 export class AuthorizationController {
-
-  private readonly authorizationService: AuthorizationService;
-
-  constructor(authorizationService: AuthorizationService) {
-    this.authorizationService = authorizationService;
-  }
+  constructor(
+    private authorizationService: AuthorizationService,
+    private cookieService: CookieService,
+  ) {}
 
   @ApiSignUp()
   @Post('/sign-up')
@@ -40,21 +55,30 @@ export class AuthorizationController {
     await this.authorizationService.sendCode(body);
   }
 
- @ApiVerifyCode()
+  @ApiVerifyCode()
   @Post('/verify-code')
   async verifyCode(
     @Body() body: AuthorizationCodeDto,
-  ): Promise<void> {
-    const tokens = await this.authorizationService.verifyCode(body);
-    return tokens;
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
+    const { accessToken } = await this.authorizationService.verifyCode(body);
+    this.cookieService.setToken(res, accessToken);
   }
 
-  @ApiRefresh()
-  @Post('/refresh')
-  async refresh(
-    @Body() body: AuthorizationRefreshDto,
-  ): Promise<ITokensResponse> {
-    const tokens = await this.authorizationService.refresh(body);
-    return tokens;
+  @Post('/sign-out')
+  @ApiOkResponse()
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthorizationGuard)
+  signOut(@Res({ passthrough: true }) res: FastifyReply) {
+    this.cookieService.removeToken(res);
+  }
+
+  @Get('/session')
+  @ApiOkResponse({
+    type: GetSessionInfoDto,
+  })
+  @UseGuards(AuthorizationGuard)
+  getSesssionInfo(@SessionInfo() session: GetSessionInfoDto) {
+    return session;
   }
 }

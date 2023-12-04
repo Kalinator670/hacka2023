@@ -1,29 +1,28 @@
 import {
-  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import {
   IAuthorizationEmail,
-  IAuthorizationRefresh,
   IAuthorizationCode,
 } from '../../models/request/authorization.requests';
 import { ICooldownResponse } from '../../models/responses/authorization.responses';
-import { ITokensResponse, ITokensResponseRefr } from '../../models/responses/shared.responses';
+import { ITokensResponseRefr } from '../../models/responses/shared.responses';
 import { PrismaService } from '../../utils/prisma.service';
 import { Requests } from '../../utils/requests';
-import { config } from 'dotenv';
-import { JwtPayload } from 'jsonwebtoken';
-const jwt = require('jsonwebtoken');
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthorizationService {
   private readonly prisma: PrismaService;
   private readonly requests: Requests;
 
-  constructor(prisma: PrismaService, requests: Requests) {
+  constructor(
+    prisma: PrismaService,
+    requests: Requests,
+    private jwtService: JwtService,
+  ) {
     this.prisma = prisma;
     this.requests = requests;
   }
@@ -37,7 +36,8 @@ export class AuthorizationService {
     }
 
     const { email } = await this.prisma.user.create({
-      data: { email: body.email,
+      data: {
+        email: body.email,
         name: body.name,
         description: body.description,
       },
@@ -57,7 +57,7 @@ export class AuthorizationService {
       where: { email: body.email },
     });
     if (!checkExist) {
-      throw new NotFoundException('Пхоне not found');
+      throw new NotFoundException('Email not found');
     }
 
     await this.sendCode(body);
@@ -81,62 +81,28 @@ export class AuthorizationService {
     });
   }
 
-  public async verifyCode(body: IAuthorizationCode): Promise<void> {
+  public async verifyCode(
+    body: IAuthorizationCode,
+  ): Promise<ITokensResponseRefr> {
     const checkExist = await this.prisma.userAuthWithCode.findFirst({
       where: { code: body.code },
     });
     if (!checkExist) {
       throw new NotFoundException('Неверные данные');
     }
-    const user = await this.prisma.user.findFirst({
-      where: { email: checkExist.email },
-    });
     await this.prisma.userAuthWithCode.update({
       where: { email: checkExist.email },
-      data: { code: null},
+      data: { code: null },
     });
-    const { id } = await this.prisma.user.findUnique({ where: { email: checkExist.email } });
-    const tokens = this.makeTokens({ id });
-    return { ...tokens, user } as any;
+    const { id } = await this.prisma.user.findUnique({
+      where: { email: checkExist.email },
+    });
+    const token = await this.makeToken({ id });
+    return { ...token };
   }
 
-  public async refresh(body: IAuthorizationRefresh): Promise<ITokensResponse> {
-    const tokenData: JwtPayload = this.decodeToken(body.refreshToken);
-    const checkExist = await this.prisma.user.findFirst({
-      where: { id: tokenData.id },
-    });
-    if (!checkExist) {
-      throw new NotFoundException('User was not found');
-    }
-    const maketoken = this.makeTokens({ id: tokenData.id });
-    return {user: checkExist, ...maketoken };
+  public async makeToken(data: { id: number }): Promise<ITokensResponseRefr> {
+    const accessToken = await this.jwtService.signAsync({ id: data?.id });
+    return { accessToken };
   }
-
-  public makeTokens(data: object = {}): ITokensResponseRefr {
-    const accessToken: string = jwt.sign(data,
-      process.env.ACCESS_TOKEN_SECRET, {
-      expiresIn: '15m',
-    });
-    const refreshToken: string = jwt.sign(data,
-      process.env.REFRESH_TOKEN_SECRET, {
-      expiresIn: '180d',
-    });
-    return {
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    };
-  }
-
-  public decodeToken(token: string): JwtPayload {
-    const tokenData = jwt.decode(token) as JwtPayload;
-    if (!tokenData) {
-      throw new BadRequestException('Incorrect token');
-    }
-    if (tokenData.exp! <= Date.now() / 1000) {
-      throw new BadRequestException('Token expired');
-    }
-    return tokenData as JwtPayload;
-  }
-
-
 }

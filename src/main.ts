@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { Logger } from '@nestjs/common';
+import cookie from '@fastify/cookie';
 import {
   FastifyAdapter,
   NestFastifyApplication,
@@ -33,6 +34,8 @@ const bootstrap = async (): Promise<void> => {
     app,
     SwaggerModule.createDocument(app, documentConfig),
   );
+
+  await app.register(cookie);
 
   await app.listen(3000, '0.0.0.0', () => {
     logger.debug('Service start on 0.0.0.0:3000');
