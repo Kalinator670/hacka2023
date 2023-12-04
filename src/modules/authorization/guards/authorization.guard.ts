@@ -17,7 +17,11 @@ export class AuthorizationGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const req = context.switchToHttp().getRequest() as FastifyReply;
+    console.log(req.cookies);
+
     const token = req.cookies[CookieService.tokenKey];
+
+    console.log(token);
 
     if (!token) {
       throw new UnauthorizedException();

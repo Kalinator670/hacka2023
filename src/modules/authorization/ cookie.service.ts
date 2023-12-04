@@ -9,6 +9,7 @@ export class CookieService {
     res.setCookie(CookieService.tokenKey, token, {
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000,
+      path: '/',
     });
   }
 

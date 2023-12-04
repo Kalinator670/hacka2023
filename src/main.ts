@@ -22,10 +22,6 @@ const bootstrap = async (): Promise<void> => {
   const documentConfig = new DocumentBuilder()
     .setTitle('Hackaton2023 api ')
     .setDescription('Potom opishu')
-    .addBearerAuth(
-      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
-      'JWT',
-    )
     .setVersion('1.0')
     .build();
 
